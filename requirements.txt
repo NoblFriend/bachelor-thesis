@@ -5,3 +5,5 @@ matplotlib
 scikit-learn
 torchvision
 tqdm
+pandas
+seaborn

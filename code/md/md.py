@@ -1,10 +1,9 @@
 import torch
 from torch.func import functional_call
+from tqdm import tqdm
 
 def mirror_descent(
     model: torch.nn.Module,
-    X_train: torch.Tensor,
-    y_train: torch.Tensor,
     data_loader: torch.utils.data.DataLoader,
     param_name: str,
     impact: torch.Tensor,
@@ -13,8 +12,11 @@ def mirror_descent(
     md_lambda: float,
     md_num_steps: int,
     criterion: torch.nn.Module,
+    device: torch.device
 ) -> torch.Tensor:
-
+    X_train, y_train = next(iter(data_loader))  
+    X_train = X_train.to(device)
+    y_train = y_train.to(device)
     impact = impact.clone().detach().requires_grad_(True)
     original_param = dict(model.named_parameters())[param_name]
 
@@ -24,7 +26,7 @@ def mirror_descent(
     new_params = {name: param.clone() for name, param in model.named_parameters()}
 
     for _ in range(md_num_steps):
-        param_new = original_param - md_lr * impact * param_grad
+        param_new = original_param - model_lr * impact * param_grad
         new_params[param_name] = param_new
         outputs_new = functional_call(model, new_params, (X_train,))
         loss_new = criterion(outputs_new, y_train)
